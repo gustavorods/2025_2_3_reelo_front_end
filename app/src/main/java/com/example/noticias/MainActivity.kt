@@ -5,8 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.VerticalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,26 +22,24 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            NewsScrollPrototype()
+            NewsVerticalPagerPrototype()
         }
     }
 }
 
 @Composable
-fun NewsScrollPrototype() {
-    // Scaffold para UI moderna
-    Scaffold(
-        containerColor = Color.Black
-    ) { padding ->
-        LazyColumn(
-            contentPadding = padding,
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center
-        ) {
-            // Simula feed infinito
-            itemsIndexed(List(50) { "Notícia #${it + 1}" }) { _, item ->
-                NewsCardPlaceholder(item = item)
-            }
+fun NewsVerticalPagerPrototype() {
+    val items = List(50) { "Notícia #${it + 1}" }
+    val pagerState = rememberPagerState { items.size }
+
+    Scaffold(containerColor = Color.Black) { padding ->
+        VerticalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) { page ->
+            NewsCardPlaceholder(item = items[page])
         }
     }
 }
@@ -138,6 +136,6 @@ fun NewsCardPlaceholder(item: String) {
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun NewsScrollPreview() {
-    NewsScrollPrototype()
+fun NewsVerticalPagerPreview() {
+    NewsVerticalPagerPrototype()
 }
