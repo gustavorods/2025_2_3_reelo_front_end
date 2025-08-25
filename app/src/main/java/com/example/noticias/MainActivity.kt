@@ -3,45 +3,141 @@ package com.example.noticias
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.noticias.ui.theme.NoticiasTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            NoticiasTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+            NewsScrollPrototype()
+        }
+    }
+}
+
+@Composable
+fun NewsScrollPrototype() {
+    // Scaffold para UI moderna
+    Scaffold(
+        containerColor = Color.Black
+    ) { padding ->
+        LazyColumn(
+            contentPadding = padding,
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Simula feed infinito
+            itemsIndexed(List(50) { "Notícia #${it + 1}" }) { _, item ->
+                NewsCardPlaceholder(item = item)
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun NewsCardPlaceholder(item: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF111111))
+            .padding(vertical = 24.dp, horizontal = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(MaterialTheme.shapes.medium)
+                .background(Color(0xFF222222)),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Imagem placeholder
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(320.dp)
+                    .background(Color(0xFF444444)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Imagem", color = Color.LightGray, fontSize = 22.sp)
+            }
+            Spacer(Modifier.height(18.dp))
+            // Título
+            Text(
+                text = item,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            Spacer(Modifier.height(12.dp))
+            // Fonte / Autor
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Fonte", color = Color(0xFFAAAAAA), fontSize = 14.sp)
+                Text("Autor", color = Color(0xFFAAAAAA), fontSize = 14.sp)
+            }
+            // Data
+            Text(
+                "Data",
+                color = Color(0xFFCCCCCC),
+                fontSize = 13.sp,
+                modifier = Modifier
+                    .padding(top = 8.dp, start = 16.dp)
+                    .align(Alignment.Start)
+            )
+            Spacer(Modifier.height(16.dp))
+            // Resumo/Descrição
+            Text(
+                "Resumo da notícia - placeholder para descrição curta.",
+                color = Color(0xFFEEEEEE),
+                fontSize = 16.sp,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            Spacer(Modifier.height(22.dp))
+            // Botões placeholder
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                ) { Text("Curtir", color = Color.White) }
+
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                ) { Text("Salvar", color = Color.White) }
+
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF333388))
+                ) { Text("Leia mais", color = Color.White) }
+            }
+        }
+    }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun GreetingPreview() {
-    NoticiasTheme {
-        Greeting("Android")
-    }
+fun NewsScrollPreview() {
+    NewsScrollPrototype()
 }
