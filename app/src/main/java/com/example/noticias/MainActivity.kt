@@ -9,6 +9,11 @@ import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,17 +22,56 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.noticias.data.News
+import com.example.noticias.network.RetrofitInstance
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            NewsVerticalPagerPrototype()
+//            NewsVerticalPagerPrototype()
+            NewsScreen()
         }
-    }
 }
 
-@Composable
+    // Tela pra testar a api
+    @Composable
+    fun NewsScreen() {
+        var newsList by remember { mutableStateOf<List<News>?>(null) }
+        var errorMsg by remember { mutableStateOf<String?>(null) }
+
+        LaunchedEffect(Unit) {
+            try {
+                newsList = RetrofitInstance.api.getNews()
+            } catch (e: Exception) {
+                errorMsg = "Erro ao carregar notícias: ${e.message}"
+            }
+        }
+
+        when {
+            errorMsg != null -> {
+                Text(text = errorMsg!!, color = Color.Red)
+            }
+            newsList == null -> {
+                Text(text = "Carregando...", color = Color.Gray)
+            }
+            else -> {
+                Column {
+                    newsList!!.forEach {
+                        Text(text = it.title, color = Color.White)
+                        Text(text = it.source.name, color = Color.LightGray)
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+            }
+        }
+    }
+
+
+    @Composable
 fun NewsVerticalPagerPrototype() {
     val items = List(50) { "Notícia #${it + 1}" }
     val pagerState = rememberPagerState { items.size }
@@ -39,13 +83,13 @@ fun NewsVerticalPagerPrototype() {
                 .fillMaxSize()
                 .padding(padding)
         ) { page ->
-            NewsCardPlaceholder(item = items[page])
+            NewsCardPlaceholder(Titulo = items[page], "oui")
         }
     }
 }
 
 @Composable
-fun NewsCardPlaceholder(item: String) {
+fun NewsCardPlaceholder(Titulo: String, Resumo: String) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -73,7 +117,7 @@ fun NewsCardPlaceholder(item: String) {
             Spacer(Modifier.height(18.dp))
             // Título
             Text(
-                text = item,
+                text = Titulo,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
@@ -102,7 +146,7 @@ fun NewsCardPlaceholder(item: String) {
             Spacer(Modifier.height(16.dp))
             // Resumo/Descrição
             Text(
-                "Resumo da notícia - placeholder para descrição curta.",
+                "Resumo",
                 color = Color(0xFFEEEEEE),
                 fontSize = 16.sp,
                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -138,4 +182,5 @@ fun NewsCardPlaceholder(item: String) {
 @Composable
 fun NewsVerticalPagerPreview() {
     NewsVerticalPagerPrototype()
+    }
 }
