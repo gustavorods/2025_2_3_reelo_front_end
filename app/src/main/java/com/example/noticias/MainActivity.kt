@@ -13,6 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,64 +33,109 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-//            NewsVerticalPagerPrototype()
-            NewsScreen()
+            NewsVerticalPagerPrototype()
         }
 }
 
-    // Tela pra testar a api
+    // Função usada pra testar a API
     @Composable
     fun NewsScreen() {
         var newsList by remember { mutableStateOf<List<News>?>(null) }
         var errorMsg by remember { mutableStateOf<String?>(null) }
+        var isLoading by remember { mutableStateOf(false) }
 
-        LaunchedEffect(Unit) {
-            try {
-                newsList = RetrofitInstance.api.getNews()
-            } catch (e: Exception) {
-                errorMsg = "Erro ao carregar notícias: ${e.message}"
+        val coroutineScope = rememberCoroutineScope() // cria o escopo de coroutines
+
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            Button(onClick = {
+                isLoading = true
+                errorMsg = null
+                coroutineScope.launch {
+                    try {
+                        newsList = RetrofitInstance.api.getNews()
+                    } catch (e: Exception) {
+                        errorMsg = "Erro ao carregar notícias: ${e.message}"
+                    } finally {
+                        isLoading = false
+                    }
+                }
+            }) {
+                Text("Carregar Notícias")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            when {
+                isLoading -> Text(text = "Carregando...", color = Color.Gray)
+                errorMsg != null -> Text(text = errorMsg!!, color = Color.Red)
+                newsList != null -> {
+                    Column {
+                        newsList!!.forEach {
+                            Text(text = it.title, color = Color.White)
+                            Text(text = it.source.name, color = Color.LightGray)
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                }
+                else -> Text(text = "Clique no botão para carregar notícias", color = Color.Gray)
             }
         }
+    }
 
-        when {
-            errorMsg != null -> {
-                Text(text = errorMsg!!, color = Color.Red)
-            }
-            newsList == null -> {
-                Text(text = "Carregando...", color = Color.Gray)
-            }
-            else -> {
-                Column {
-                    newsList!!.forEach {
-                        Text(text = it.title, color = Color.White)
-                        Text(text = it.source.name, color = Color.LightGray)
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
+    @Composable
+    fun NewsVerticalPagerPrototype() {
+        var newsList by remember { mutableStateOf<List<News>>(emptyList()) }
+        var isLoading by remember { mutableStateOf(true) }
+        var errorMsg by remember { mutableStateOf<String?>(null) }
+
+        val coroutineScope = rememberCoroutineScope()
+
+        // Faz a requisição assim que o Composable é exibido
+        LaunchedEffect(Unit) {
+            coroutineScope.launch {
+                try {
+                    newsList = RetrofitInstance.api.getNews()
+                } catch (e: Exception) {
+                    errorMsg = "Erro ao carregar notícias: ${e.message}"
+                } finally {
+                    isLoading = false
                 }
             }
         }
-    }
 
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Carregando...", color = Color.Gray)
+            }
+            return
+        }
 
-    @Composable
-fun NewsVerticalPagerPrototype() {
-    val items = List(50) { "Notícia #${it + 1}" }
-    val pagerState = rememberPagerState { items.size }
+        errorMsg?.let {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = it, color = Color.Red)
+            }
+            return
+        }
 
-    Scaffold(containerColor = Color.Black) { padding ->
-        VerticalPager(
-            state = pagerState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) { page ->
-            NewsCardPlaceholder(Titulo = items[page], "oui")
+        // VerticalPager agora usa o tamanho real da lista da API
+        val pagerState = rememberPagerState { newsList.size }
+
+        Scaffold(containerColor = Color.Black) { padding ->
+            VerticalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) { page ->
+                val newsItem = newsList[page]
+                NewsCardPlaceholder(Titulo = newsItem.title, Fonte = newsItem.source.name, Autor = newsItem.source.name, Data = newsItem.publishedAt, Resumo = newsItem.content, imagem = newsItem.image)
+            }
         }
     }
-}
 
-@Composable
-fun NewsCardPlaceholder(Titulo: String, Resumo: String) {
+    @Composable
+    fun NewsCardPlaceholder(Titulo: String, Fonte: String, Autor: String, Data: String, Resumo: String, imagem: String) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -131,12 +177,12 @@ fun NewsCardPlaceholder(Titulo: String, Resumo: String) {
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Fonte", color = Color(0xFFAAAAAA), fontSize = 14.sp)
-                Text("Autor", color = Color(0xFFAAAAAA), fontSize = 14.sp)
+                Text(Fonte, color = Color(0xFFAAAAAA), fontSize = 14.sp)
+                Text(Autor, color = Color(0xFFAAAAAA), fontSize = 14.sp)
             }
             // Data
             Text(
-                "Data",
+                Data,
                 color = Color(0xFFCCCCCC),
                 fontSize = 13.sp,
                 modifier = Modifier
@@ -146,7 +192,7 @@ fun NewsCardPlaceholder(Titulo: String, Resumo: String) {
             Spacer(Modifier.height(16.dp))
             // Resumo/Descrição
             Text(
-                "Resumo",
+                Resumo,
                 color = Color(0xFFEEEEEE),
                 fontSize = 16.sp,
                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -178,9 +224,9 @@ fun NewsCardPlaceholder(Titulo: String, Resumo: String) {
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun NewsVerticalPagerPreview() {
-    NewsVerticalPagerPrototype()
+    @Preview(showBackground = true, showSystemUi = true)
+    @Composable
+    fun NewsVerticalPagerPreview() {
+        NewsVerticalPagerPrototype()
+        }
     }
-}
