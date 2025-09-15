@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.noticias.data.News
+import coil.compose.AsyncImage
 import com.example.noticias.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -158,7 +159,10 @@ class MainActivity : ComponentActivity() {
                     .background(Color(0xFF444444)),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Imagem", color = Color.LightGray, fontSize = 22.sp)
+                AsyncImage(
+                    model = imagem.takeIf { it.isNotBlank() } ?: "https://picsum.photos/200",
+                    contentDescription = "Example image"
+                )
             }
             Spacer(Modifier.height(18.dp))
             // Título

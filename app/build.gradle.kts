@@ -40,6 +40,8 @@ android {
 }
 
 dependencies {
+    // para pegar images usando url
+    implementation("io.coil-kt:coil-compose:2.4.0") // Coil para Compose
 
     // Retrofit para consumir API
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
